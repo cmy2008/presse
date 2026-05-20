@@ -2,7 +2,7 @@
 name = "presse"
 version = "0.2.0"
 edition = "2024"
-author = "Simon Buré"
+authors = ["Simon Buré"]
 description = "Fast PDF compression CLI — JPEG recompression and structural optimization"
 license = "GPL-3.0"
 repository = "https://github.com/SimonBure/presse"
