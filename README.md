@@ -71,6 +71,18 @@ presse press document.pdf --quality 60
 
 # Show size comparison after each file
 presse press document.pdf --verbose
+
+# Combine everything in a merged.pdf
+presse merge *.pdf
+
+# Convert images into pdfs
+presse convert img1.png img2.jpg img3.jpeg
+
+# Convert all png images, compressed them and merged them into a single pdf 
+presse convert *.png -m -q 50
+
+# Merge image and pdf together into a single pdf
+presse merge *.png *.pdf
 ```
 
 | Flag | Default | Description |
