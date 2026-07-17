@@ -123,17 +123,17 @@ fn replace_all_references(doc: &mut Document, redirects: &BTreeMap<ObjectId, Obj
 
 fn replace_in_obj(obj: &mut Object, redirects: &BTreeMap<ObjectId, ObjectId>) {
     match obj {
-        Object::Reference(ref mut id) => {
+        Object::Reference(id) => {
             if let Some(&new_id) = redirects.get(id) {
                 *id = new_id;
             }
         }
-        Object::Array(ref mut arr) => {
+        Object::Array(arr) => {
             for item in arr.iter_mut() {
                 replace_in_obj(item, redirects);
             }
         }
-        Object::Dictionary(ref mut dict) => {
+        Object::Dictionary(dict) => {
             let keys: Vec<Vec<u8>> = dict.iter().map(|(k, _)| k.clone()).collect();
             for key in &keys {
                 if let Ok(val) = dict.get_mut(key) {
@@ -141,7 +141,7 @@ fn replace_in_obj(obj: &mut Object, redirects: &BTreeMap<ObjectId, ObjectId>) {
                 }
             }
         }
-        Object::Stream(ref mut stream) => {
+        Object::Stream(stream) => {
             let keys: Vec<Vec<u8>> = stream.dict.iter().map(|(k, _)| k.clone()).collect();
             for key in &keys {
                 if let Ok(val) = stream.dict.get_mut(key) {
