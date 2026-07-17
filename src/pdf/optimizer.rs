@@ -1,5 +1,5 @@
-use std::collections::{BTreeMap, hash_map::DefaultHasher};
-use std::hash::{Hash, Hasher};
+use std::collections::BTreeMap;
+use std::hash::{Hash, Hasher, DefaultHasher};
 use lopdf::{Document, Object, ObjectId};
 
 const MIN_STREAM_SIZE: usize = 256;
@@ -78,7 +78,7 @@ fn get_font_file_refs(doc: &Document, obj_id: ObjectId) -> Vec<ObjectId> {
         Err(_) => return Vec::new(),
     };
 
-    let is_font = dict.get(b"Type")
+    let is_font = dict.get(b"Type").ok()
         .and_then(|o| o.as_name().ok())
         .map_or(false, |name| name == b"Font");
 
@@ -86,7 +86,8 @@ fn get_font_file_refs(doc: &Document, obj_id: ObjectId) -> Vec<ObjectId> {
         return Vec::new();
     }
 
-    let desc_ref = match dict.get(b"FontDescriptor").and_then(|o| o.as_reference().ok()) {
+    let desc_ref = match dict.get(b"FontDescriptor").ok()
+        .and_then(|o| o.as_reference().ok()) {
         Some(r) => r,
         None => return Vec::new(),
     };
@@ -102,8 +103,9 @@ fn get_font_file_refs(doc: &Document, obj_id: ObjectId) -> Vec<ObjectId> {
     };
 
     let mut refs = Vec::new();
-    for key in [b"FontFile", b"FontFile2", b"FontFile3"] {
-        if let Ok(ff_ref) = desc_dict.get(key).and_then(|o| o.as_reference().ok()) {
+    for key in &[b"FontFile" as &[u8], b"FontFile2", b"FontFile3"] {
+        if let Ok(ff_ref) = desc_dict.get(key).ok()
+            .and_then(|o| o.as_reference().ok()) {
             refs.push(ff_ref);
         }
     }
@@ -132,12 +134,12 @@ fn replace_in_obj(obj: &mut Object, redirects: &BTreeMap<ObjectId, ObjectId>) {
             }
         }
         Object::Dictionary(ref mut dict) => {
-            for val in dict.values_mut() {
+            for (_, val) in dict.0.iter_mut() {
                 replace_in_obj(val, redirects);
             }
         }
         Object::Stream(ref mut stream) => {
-            for val in stream.dict.values_mut() {
+            for (_, val) in stream.dict.0.iter_mut() {
                 replace_in_obj(val, redirects);
             }
         }
