@@ -6,7 +6,6 @@ use pdf::reader::{load_pdf, load_input_as_pdf, get_pdf_size_in_kilobytes, get_co
 use pdf::writer::{compress_and_save_pdf, save_pdf};
 use pdf::images::compress_images;
 use pdf::merger::merge;
-use pdf::optimizer::optimize;
 use pdf::builder::image_to_pdf;
 
 use cli::args::{Cli, Commands, resolve_press_path_output, resolve_merge_path_output, resolve_convert_path_output};
@@ -136,7 +135,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let mut merged = merge(documents)?;
 
             if optimize {
-                optimize(&mut merged);
+                pdf::optimizer::optimize(&mut merged);
             }
 
             save_pdf(&mut merged, output.to_str().unwrap())?;
