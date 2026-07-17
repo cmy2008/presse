@@ -134,7 +134,7 @@ fn replace_in_obj(obj: &mut Object, redirects: &BTreeMap<ObjectId, ObjectId>) {
             }
         }
         Object::Dictionary(ref mut dict) => {
-            let keys: Vec<Vec<u8>> = dict.iter().map(|(k, _)| Vec::from(k)).collect();
+            let keys: Vec<Vec<u8>> = dict.iter().map(|(k, _)| k.clone()).collect();
             for key in &keys {
                 if let Ok(val) = dict.get_mut(key) {
                     replace_in_obj(val, redirects);
@@ -142,7 +142,7 @@ fn replace_in_obj(obj: &mut Object, redirects: &BTreeMap<ObjectId, ObjectId>) {
             }
         }
         Object::Stream(ref mut stream) => {
-            let keys: Vec<Vec<u8>> = stream.dict.iter().map(|(k, _)| Vec::from(k)).collect();
+            let keys: Vec<Vec<u8>> = stream.dict.iter().map(|(k, _)| k.clone()).collect();
             for key in &keys {
                 if let Ok(val) = stream.dict.get_mut(key) {
                     replace_in_obj(val, redirects);
