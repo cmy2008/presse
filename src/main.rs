@@ -12,6 +12,38 @@ use cli::args::{Cli, Commands, resolve_press_path_output, resolve_merge_path_out
 use clap::Parser;
 
 use indicatif::{ProgressBar, ProgressStyle};
+use std::path::PathBuf;
+
+fn expand_globs(paths: Vec<PathBuf>) -> Vec<PathBuf> {
+    let mut result = Vec::new();
+    for path in paths {
+        if path.exists() {
+            result.push(path);
+        } else {
+            let s = match path.to_str() {
+                Some(s) => s,
+                None => { result.push(path); continue; }
+            };
+            match glob::glob(s) {
+                Ok(entries) => {
+                    let mut found = false;
+                    for entry in entries {
+                        match entry {
+                            Ok(p) => { result.push(p); found = true; }
+                            Err(e) => eprintln!("Warning: error matching '{}': {}", s, e),
+                        }
+                    }
+                    if !found { result.push(path); }
+                }
+                Err(e) => {
+                    eprintln!("Warning: invalid glob pattern '{}': {}", s, e);
+                    result.push(path);
+                }
+            }
+        }
+    }
+    result
+}
 
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -19,6 +51,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match cli.command {
         Commands::Press { input, output, quality, verbose } => {
+            let input = expand_globs(input);
             let bar = ProgressBar::new(input.len() as u64);
             bar.set_style(ProgressStyle::default_bar()
                 .template("{bar:40.cyan/blue} {pos}/{len} {eta}")
@@ -76,6 +109,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         Commands::Merge { input, output, compress } => {
+            let input = expand_globs(input);
             let mut documents = Vec::new();
             for path in &input {
                 match load_input_as_pdf(path, false) {
@@ -98,6 +132,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         Commands::Convert { input, output, merge: do_merge, compress, quality, verbose } => {
+            let input = expand_globs(input);
             if do_merge {
                 let mut docs = Vec::new();
                 for path in &input {
