@@ -104,7 +104,7 @@ fn get_font_file_refs(doc: &Document, obj_id: ObjectId) -> Vec<ObjectId> {
 
     let mut refs = Vec::new();
     for key in &[b"FontFile" as &[u8], b"FontFile2", b"FontFile3"] {
-        if let Ok(ff_ref) = desc_dict.get(key).ok()
+        if let Some(ff_ref) = desc_dict.get(key).ok()
             .and_then(|o| o.as_reference().ok()) {
             refs.push(ff_ref);
         }
@@ -134,13 +134,19 @@ fn replace_in_obj(obj: &mut Object, redirects: &BTreeMap<ObjectId, ObjectId>) {
             }
         }
         Object::Dictionary(ref mut dict) => {
-            for (_, val) in dict.0.iter_mut() {
-                replace_in_obj(val, redirects);
+            let keys: Vec<Vec<u8>> = dict.iter().map(|(k, _)| Vec::from(k)).collect();
+            for key in &keys {
+                if let Ok(val) = dict.get_mut(key) {
+                    replace_in_obj(val, redirects);
+                }
             }
         }
         Object::Stream(ref mut stream) => {
-            for (_, val) in stream.dict.0.iter_mut() {
-                replace_in_obj(val, redirects);
+            let keys: Vec<Vec<u8>> = stream.dict.iter().map(|(k, _)| Vec::from(k)).collect();
+            for key in &keys {
+                if let Ok(val) = stream.dict.get_mut(key) {
+                    replace_in_obj(val, redirects);
+                }
             }
         }
         _ => {}
