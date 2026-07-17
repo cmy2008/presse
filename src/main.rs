@@ -6,6 +6,7 @@ use pdf::reader::{load_pdf, load_input_as_pdf, get_pdf_size_in_kilobytes, get_co
 use pdf::writer::{compress_and_save_pdf, save_pdf};
 use pdf::images::compress_images;
 use pdf::merger::merge;
+use pdf::optimizer::optimize;
 use pdf::builder::image_to_pdf;
 
 use cli::args::{Cli, Commands, resolve_press_path_output, resolve_merge_path_output, resolve_convert_path_output};
@@ -14,9 +15,9 @@ use clap::Parser;
 use indicatif::{ProgressBar, ProgressStyle};
 use std::path::PathBuf;
 
-fn expand_globs(paths: Vec<PathBuf>) -> Vec<PathBuf> {
+fn expand_globs(mut paths: Vec<PathBuf>) -> Vec<PathBuf> {
     let mut result = Vec::new();
-    for path in paths {
+    for path in paths.drain(..) {
         if path.exists() {
             result.push(path);
         } else {
@@ -42,6 +43,11 @@ fn expand_globs(paths: Vec<PathBuf>) -> Vec<PathBuf> {
             }
         }
     }
+    result.sort_by(|a, b| {
+        let a = a.to_str().unwrap_or("");
+        let b = b.to_str().unwrap_or("");
+        natord::compare(a, b)
+    });
     result
 }
 
@@ -108,7 +114,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             bar.finish_with_message("Done");
         }
 
-        Commands::Merge { input, output, compress } => {
+        Commands::Merge { input, output, compress, optimize } => {
             let input = expand_globs(input);
             let mut documents = Vec::new();
             for path in &input {
@@ -128,6 +134,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let output = resolve_merge_path_output(&output, compress);
 
             let mut merged = merge(documents)?;
+
+            if optimize {
+                optimize(&mut merged);
+            }
+
             save_pdf(&mut merged, output.to_str().unwrap())?;
         }
 

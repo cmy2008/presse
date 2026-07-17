@@ -41,6 +41,10 @@ pub enum Commands {
         /// Compress the merged file
         #[arg(short, long, default_value_t = false)]
         compress: bool,
+
+        /// Optimize the merged file (deduplicate identical fonts, etc.)
+        #[arg(long, default_value_t = false)]
+        optimize: bool,
     },
 
     /// Convert one or several images to PDF

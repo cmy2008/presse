@@ -3,3 +3,4 @@ pub mod writer;
 pub mod images;
 pub mod merger;
 pub mod builder;
+pub mod optimizer;

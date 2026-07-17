@@ -30,6 +30,9 @@ image = "0.25.9"
 # Glob pattern expansion (especially needed on Windows)
 glob = "0.3"
 
+# Natural sort for human-friendly filename ordering
+natord = "1.0"
+
 # The profile that 'dist' will build with
 [profile.dist]
 inherits = "release"
